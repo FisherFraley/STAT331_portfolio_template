@@ -10,7 +10,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an \_\_.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an B.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from Lab or Challenge assignments where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -1290,8 +1290,16 @@ For my revisions, I included your feedback in bold red text directly above the u
 
 <!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
 
+I've been working on how I present data in my plots and tables to make them more transparent and more engaging. One of the first things I did was rename variables to ensure the labels were straightforward and easy to read. I also experimented with different colors to create visuals that pop without being overwhelming. To improve readability, I adjusted the scales and spacing in my plots so the data points don't feel cramped, making it easier to spot patterns. Additionally, I've been focusing on organizing my code better. While I haven't added many comments yet, I'm planning to incorporate them more consistently in the coming weeks. I think this will help others (and myself!) follow my work more easily. Overall, I'm excited about these improvements and how they'll enhance my data presentation efforts.
+
 ## Peer Support & Collaboration
 
 <!-- Include an image or a description of feedback you gave that you are proud of (either in a peer review or in Discord). -->
 
+![](images/clipboard-1399497268.png)
+
+Lab 3\^
+
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
+
+hroughout this class, I’ve grown as a collaborator by thinking more intentionally about what my peers can learn from my feedback. Instead of simply saying what I liked or didn’t like, I began giving specific, detailed comments that explained *why* something worked or how it could be improved. This approach helped my partners make immediate changes and learn from the process, while also improving my own understanding as I explained my reasoning.
