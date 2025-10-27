@@ -924,6 +924,10 @@ statewide_by_year <- ca_childcare_long |>
 #| label: dvs-6-ex-1
 
 
+#Lab 4
+statewide_by_year <- ca_childcare_long |>
+  group_by(year, setting, age_group) |>
+  summarise(median_price = median(median_price, na.rm = TRUE), .groups = "drop")
 
 
 ```
@@ -933,13 +937,37 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: dvs-6-ex-2
 
+#Inspired from Lab 4
+statewide_by_year |>
+  select(year, setting, age_group, median_price) |>
+  rename(
+    Year = year,
+    Setting = setting,
+    `Age Group` = age_group,
+    `Median Weekly Price ($)` = median_price
+  ) |>
+  kable(
+    caption = "Table 1. California Childcare Median Weekly Prices (2008–2018)",
+    digits = 0,
+    align = "c"
+  ) |>
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) |>
+  row_spec(0, bold = TRUE)
+
 ```
 
 -   I can arrange my table to have an intuitive ordering
 
 ```{r}
 #| label: dvs-6-ex-3
-
+#Lab 4
+median_infant_region <- ca_childcare |>
+filter(study_year == 2018) |>
+group_by(region) |>
+summarize(median_infant = median(mc_infant, na.rm = TRUE),
+          median_income = median(mhi_2018, na.rm = TRUE),
+.groups = "drop") |>
+  arrange(desc(median_infant))
 ```
 
 **DVS-7: I show creativity in my tables.**
@@ -997,12 +1025,47 @@ median_region <- ca_childcare |>
 ```{r}
 #| label: pe-1-one-call
 
+#Lab 4
+ca_childcare <- ca_childcare |> 
+  mutate(county_name = str_remove(county_name, " County"),
+  region = fct_collapse(
+    as_factor(county_name),
+    Superior = superior_counties,
+    North_Coast = north_coast_counties,
+    San_Fran = san_fran_counties,
+    N_San_Joaqin = n_san_joaquin_counties,
+    Central_Coast = central_coast_counties,
+    S_San_Joaqin = s_san_joaquin_counties,
+    Inland = inland_counties,
+    LA = la_county,
+    Orange = orange_county,
+    San_Diego = san_diego_imperial_counties
+  ))
+
+
+
 ```
 
 -   using `across()`
 
 ```{r}
 #| label: pe-1-across
+
+#Lab 4 (Modified)
+statewide_by_year <- ca_childcare_long |>
+  group_by(year, setting, age_group) |>
+  summarise(
+    across(
+      .cols = median_price,
+      .fns = list(
+        lower = ~quantile(.x, 0.25, na.rm = TRUE),
+        median = ~median(.x, na.rm = TRUE),
+        upper = ~quantile(.x, 0.75, na.rm = TRUE)
+      )
+    ),
+    .groups = "drop"
+  )
+
 
 ```
 
@@ -1051,6 +1114,22 @@ median_region <- ca_childcare |>
 ```{r}
 #| label: pe-3-across
 
+
+#Lab 4 (Modified)
+statewide_by_year <- ca_childcare_long |>
+  group_by(year, setting, age_group) |>
+  summarise(
+    across(
+      .cols = median_price,
+      .fns = list(
+        lower = ~quantile(.x, 0.25, na.rm = TRUE),
+        median = ~median(.x, na.rm = TRUE),
+        upper = ~quantile(.x, 0.75, na.rm = TRUE)
+      )
+    ),
+    .groups = "drop"
+  )
+
 ```
 
 -   using a `map()` function with **one** input (e.g., `map()`, `map_chr()`, `map_dbl()`, etc.)
@@ -1078,12 +1157,34 @@ median_region <- ca_childcare |>
 ```{r}
 #| label: pe-4-1
 
+sus_day <- dmy_hms("24-November-2022 12:00:00")
+force_tz(sus_day, tzone = "America/Los_Angeles")
+suspects <- suspects |>
+  filter(Time.Spotted %within% interval(sus_day + weeks(5),
+                  sus_day - weeks(5)))
+suspects
+
 ```
 
 -   I can connect a data wrangling pipeline into a `ggplot()`
 
 ```{r}
 #| label: pe-4-2
+
+#Lab 4
+ques_8 <- ca_childcare |>
+filter(study_year == 2018, !is.na(mhi_2018), !is.na(mc_infant))
+
+ggplot(data = ques_8, aes(x = mhi_2018, y = mc_infant)) + 
+  geom_point(aes(color = region)) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(
+    title = "Relationship Between Median Household Income 
+    and Infant Childcare Price in California (2018)",
+    x = "Median Household Income (2018 dollars)",
+    y = "Median Weekly Infant Care Price (Center-Based)"
+  ) +
+  theme_minimal()
 
 ```
 
