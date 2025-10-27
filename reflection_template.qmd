@@ -23,6 +23,10 @@ execute:
 ```{r}
 #| label: wd-1-csv-1
 
+# From Lab 2
+surveys <- read_csv(here::here("Week 2", "data", "surveys.csv"))
+
+
 ```
 
 -   `csv` Example 2
@@ -30,12 +34,23 @@ execute:
 ```{r}
 #| label: wd-1-csv-2
 
+#Lab 3
+teacher_evals <- read_csv(here::here("Week 3", "Data", "teacher_evals.csv"))
 ```
 
 -   `xlsx`
 
 ```{r}
 #| label: wd-1-xlsx
+
+#PA 4
+military <- read_xlsx("gov_spending_per_capita.xlsx",
+                      sheet = "Share of Govt. spending",
+                      skip  = 7,
+                      n_max = 190,
+                      na = c(". .", "xxx", ". . ")
+
+                      )
 
 ```
 
@@ -46,6 +61,19 @@ execute:
 ```{r}
 #| label: wd-2-ex-1
 
+#Lab 3
+teacher_evals_clean <- teacher_evals |>
+  rename(sex = gender) |>
+  filter(no_participants > 9) |>
+  mutate(
+    teacher_id = as.character(teacher_id),
+    course_id = as.character(course_id)) |>
+  select(
+    course_id, teacher_id, question_no, 
+    no_participants, resp_share, SET_score_avg, 
+    percent_failed_cur, academic_degree, seniority, sex)
+
+
 ```
 
 -   Example removing specified columns
@@ -53,12 +81,33 @@ execute:
 ```{r}
 #| label: wd-2-ex-2
 
+#PA 3
+colleges_clean1 <- colleges |>
+  select(INSTNM,
+         CITY,
+         STABBR,
+         ZIP,
+         ADM_RATE,
+         SAT_AVG,
+         UGDS,
+         TUITIONFEE_IN,
+         TUITIONFEE_OUT,
+         CONTROL,
+         REGION)
+
+
+
 ```
 
 -   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`)
 
 ```{r}
 #| label: wd-2-ex-3
+
+#Modified from PA 3
+dream_college <- colleges_clean |>
+  select(contains("TUITION"), ends_with("_RATE"), -ends_with("_ID"))
+
 
 ```
 
@@ -69,19 +118,51 @@ execute:
 ```{r}
 #| label: wd-3-numeric-ex-1
 
+#Lab 3
+teacher_evals_clean |>
+  group_by(course_id, teacher_id) |>
+  summarize(num_q = n_distinct(question_no)) |>
+  filter(num_q == 9) |>
+  nrow()
+
 ```
 
 -   Numeric Example 2
 
 ```{r}
-#| label: wd-3-numeric-ex-1
+#| label: wd-3-numeric-ex-2
 
+#Lab 3
+avg_rat_5 <- teacher_evals_clean |>
+  filter(question_no == 901) |>
+  group_by(teacher_id) |>
+    summarize(
+      avg_rat = mean(SET_score_avg, na.rm = TRUE),
+      n_courses = n_distinct(course_id)
+  ) |>
+  filter(n_courses >= 5) 
+  
+avg_rat_5 |>
+  slice_max(avg_rat)
 ```
 
 -   Character Example 1 (any context)
 
 ```{r}
 #| label: wd-3-character
+
+#Lab 3
+ques_12 <- teacher_evals_clean |>
+  filter(academic_degree %in% c("dr", "prof")) |>
+  group_by(teacher_id) |> 
+  summarize(
+    avg_resp   = mean(resp_share, na.rm = TRUE),
+    sex       = dplyr::first(na.omit(sex)),
+    seniority = dplyr::first(na.omit(seniority)),
+    .groups = "drop"
+  ) |>
+  filter(!is.nan(avg_resp)) |>
+  mutate(avg_resp_pct = round(100 * avg_resp, 1))
 
 ```
 
@@ -90,12 +171,26 @@ execute:
 ```{r}
 #| label: wd-3-string
 
+#PA 5.1
+m_message_data <- message_data |>
+  filter(str_detect(Word, pattern = "^m"))
+m_message_data
 ```
 
 -   Date (example must use functions from **lubridate**)
 
 ```{r}
 #| label: wd-3-date
+
+#PA 5.2
+suspects <- suspects |>
+  filter(wday(Time.Spotted,
+              label = TRUE,
+              abbr = FALSE) != "Tuesday" &
+        wday(Time.Spotted,
+              label = TRUE,
+              abbr = FALSE) != "Thursday")
+
 
 ```
 
@@ -106,12 +201,30 @@ execute:
 ```{r}
 #| label: wd-4-numeric-ex-1
 
+#Challenge 3
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(
+    SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+    sen_level = if_else(seniority <= 4, "junior", "senior")
+  ) |>
+  select(course_id, SET_level, sen_level)
+
+
 ```
 
 -   Numeric Example 2
 
 ```{r}
 #| label: wd-4-numeric-ex-2
+
+#PA 3
+colleges_clean3 <- colleges_clean2 |>
+  mutate(TUITIONFEE_IN  = as.numeric(TUITIONFEE_IN),
+         TUITIONFEE_OUT = as.numeric(TUITIONFEE_OUT),
+         SAT_AVG        = as.numeric(SAT_AVG),
+         UGDS           = as.numeric(UGDS),
+         ADM_RATE       = as.numeric(ADM_RATE))
 
 ```
 
@@ -120,12 +233,27 @@ execute:
 ```{r}
 #| label: wd-4-factor-ex-1
 
+#PA 3
+colleges_clean4 <- colleges_clean3 |>
+  mutate(CONTROL = as.factor(CONTROL),
+         REGION  = as.factor(REGION))
+
 ```
 
 -   Factor Example 2 (reordering levels)
 
 ```{r}
 #| label: wd-4-factor-ex-2
+
+#Lab 4
+median_all_region |>
+  pivot_longer(c(Infant, Toddler, Preschool),
+               names_to = "age_group",
+               values_to = "weekly_price") |>
+  mutate(
+    age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))
+  )
+
 
 ```
 
@@ -134,12 +262,22 @@ execute:
 ```{r}
 #| label: wd-4-string
 
+#PA 5.1
+message_data <- message_data |>
+  mutate(Word = str_trim(Word, side = "both"))
+message_data
 ```
 
 -   Date (example must use functions from **lubridate**)
 
 ```{r}
 #| label: wd-4-date
+
+sus_day <- dmy_hms("24-November-2022 12:00:00")
+force_tz(sus_day, tzone = "America/Los_Angeles")
+suspects <- suspects |>
+  filter(Time.Spotted %within% interval(sus_day + weeks(5),
+                  sus_day - weeks(5)))
 
 ```
 
@@ -150,12 +288,26 @@ execute:
 ```{r}
 #| label: wd-5-left-ex-1
 
+#Challenge 4
+ca_childcare <- counties |>
+  filter(state_abbreviation == "CA") |>
+  left_join(y = childcare_costs,
+            by = join_by(county_fips_code == county_fips_code))
+
+
 ```
 
 -   `right_join()` Example 1
 
 ```{r}
 #| label: wd-5-right
+
+# Challenge 4 (same output using right_join)
+ca_childcare <- childcare_costs |>
+  right_join(y = counties |> 
+               filter(state_abbreviation == "CA"),
+             by = join_by(county_fips_code == county_fips_code))
+
 
 ```
 
@@ -164,6 +316,15 @@ execute:
 ```{r}
 #| label: wd-5-left-right-ex-2
 
+#Modified Challenge 4
+ca_childcare <- childcare_costs |>
+  right_join(
+    y = counties |> 
+      filter(state_abbreviation == "CA"),
+    by = join_by(county_fips_code == county_fips_code)
+  ) |>
+  select(county_fips_code, county_name, study_year, mc_infant:mfcc_preschool)
+
 ```
 
 -   `inner_join()` Example 1
@@ -171,12 +332,33 @@ execute:
 ```{r}
 #| label: wd-5-inner-ex-1
 
+#Modified Challenge 4
+ca_childcare <- counties |>
+  filter(state_abbreviation == "CA") |>
+  inner_join(
+    y = childcare_costs,
+    by = join_by(county_fips_code == county_fips_code)
+  ) |>
+  select(county_fips_code, county_name, study_year, mc_infant:mfcc_preschool)
+
+
 ```
 
 -   `inner_join()` Example 2
 
 ```{r}
 #| label: wd-5-inner-ex-2
+
+#Modified Lab 4
+ca_childcare <- counties |>
+  filter(state_abbreviation == "CA") |>
+  inner_join(
+    y = childcare_costs,
+    by = join_by(county_fips_code == county_fips_code)
+  )
+
+ca_childcare
+
 
 ```
 
@@ -187,12 +369,33 @@ execute:
 ```{r}
 #| label: wd-6-semi
 
+#Modified Lab 4
+ca_childcare <- counties |>
+  filter(state_abbreviation == "CA") |>
+  semi_join(
+    y = childcare_costs,
+    by = join_by(county_fips_code == county_fips_code)
+  )
+
+
+
 ```
 
 -   `anti_join()`
 
 ```{r}
 #| label: wd-6-anti
+
+#Modified Lab 4
+ca_childcare <- counties |>
+  filter(state_abbreviation == "CA") |>
+  anti_join(
+    y = childcare_costs,
+    by = join_by(county_fips_code == county_fips_code)
+  )
+
+ca_childcare
+
 
 ```
 
@@ -203,12 +406,33 @@ execute:
 ```{r}
 #| label: wd-7-long
 
+ca_childcare_long <- ca_childcare |>
+  pivot_longer(
+    cols = mc_infant:mfcc_preschool,
+    names_to = c("setting_raw", "age_group"),
+    names_pattern = "m(c|fcc)_(infant|toddler|preschool)",
+    values_to = "median_price"
+  )
+
 ```
 
 -   `pivot_wider()`
 
 ```{r}
 #| label: wd-7-wide
+
+median_region <- ca_childcare |>
+  filter(study_year %in% c(2008, 2018)) |>
+  group_by(region, study_year) |>
+  summarise(
+    median_income = median(mhi_2018, na.rm = TRUE)
+  ) |>
+  pivot_wider(
+    names_from = study_year,
+    values_from = median_income,
+    names_prefix = "year_"
+  ) |>
+  arrange(desc(year_2018))
 
 ```
 
@@ -231,12 +455,40 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-2-1
 
+##| label: medium-option-colors
+
+# Challenge 2
+# Boxplot of rodent weight by species and sex
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +  # boxplots
+  geom_jitter(width = 0.15, alpha = 0.3, size = 1) +  # individual points
+  scale_color_manual(values = tron_colors) +  # custom colors
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # angled labels
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+  )
+
 ```
 
 -   Example of **dplyr** pipeline
 
 ```{r}
 #| label: r-2-2
+
+##| label: teacher-course-asked-every-question
+
+# Lab 3
+# Count courses with all 9 evaluation questions
+teacher_evals_clean |>
+  group_by(course_id, teacher_id) |>  # group by course and teacher
+  summarise(num_q = n_distinct(question_no)) |>  # count unique questions
+  filter(num_q == 9) |>  # keep complete sets
+  nrow()  # number of qualifying courses
+
 
 ```
 
@@ -245,6 +497,7 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-2-3
 
+#Not done yet in class
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
@@ -254,12 +507,15 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-3-example
 
+#Not done yet in class
 ```
 
 -   Example (function stops)
 
 ```{r}
 #| label: r-3-function-stops
+
+#Not done yet in class
 
 ```
 
@@ -272,12 +528,38 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-1-num
 
+# From Lab 2
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point(alpha = .3) +
+  facet_wrap(~species) +
+  labs(
+    title = "Hindfoot Length by Weight For Different Species of Rodents",
+    x = "Weight (grams)",
+    y = NULL,
+    subtitle = "Y-Axis = Hindfoot length (mm)", 
+    caption = "Source: Portal Project Database"
+  )
+
 ```
 
 -   At least one numeric variable and one categorical variable
 
 ```{r}
 #| label: dvs-2-num-cat
+
+# From Lab 2
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point(alpha = .3) +
+  facet_wrap(~species) +
+  labs(
+    title = "Hindfoot Length by Weight For Different Species of Rodents",
+    x = "Weight (grams)",
+    y = NULL,
+    subtitle = "Y-Axis = Hindfoot length (mm)", 
+    caption = "Source: Portal Project Database"
+  )
 
 ```
 
@@ -286,12 +568,44 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-cat
 
+#Challenge 3
+tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  scale_color_manual(values = tron_colors) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+   )
 ```
 
 -   Dates (time series plot)
 
 ```{r}
 #| label: dvs-2-date
+
+#Inspired by PA 5.2 to see 
+suspects |>
+  mutate(day = wday(Time.Spotted, label = TRUE, abbr = FALSE)) |>
+  count(day) |>
+  ggplot(aes(x = day, y = n, fill = day)) +
+  geom_col(show.legend = FALSE) +
+  labs(
+    title = "Number of People in the Gym by Day of the Week",
+    x = "Day of the Week",
+    y = "Number of People"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
 
 ```
 
@@ -301,6 +615,22 @@ The following assignments satisfy the above criteria:
 
 ```{r}
 #| label: dvs-2-ex-1
+# From: Challenge 3
+# Color Palette: https://color.adobe.com/TRON-color-theme-6970180/
+tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  scale_color_manual(values = tron_colors) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Y-Axis = Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+   )
 
 ```
 
@@ -309,12 +639,39 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-2
 
+#Challenge 2:
+library(viridis)
+
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  scale_color_viridis_d(option = "D", end = 0.9) +  # discrete viridis palette
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Y-Axis = Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+  )
+
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
 
 ```{r}
 #| label: dvs-2-ex-3
+
+#Challenge 4
+labs(
+  title = "Figure 1: CA Full-Time Median Weekly Childcare Prices (2008–2018)",
+  x = "Year", y = "Median Weekly Price ($)", color = "Setting"
+) +
+theme(
+  panel.spacing = unit(1.6, "lines"),
+  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+)
+
 
 ```
 
@@ -323,12 +680,51 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-4
 
+#Challenge 4
+labs(
+  title = "Figure 1: CA Full-Time Median Weekly Childcare Prices (2008–2018)",
+  x = "Year", y = "Median Weekly Price ($)", color = "Setting"
+) +
+theme(
+  panel.spacing = unit(1.6, "lines"),
+  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+)
+
 ```
 
 -   I can reorder my legend to align with the colors in my plot
 
 ```{r}
 #| label: dvs-2-ex-5
+
+#Lab 4 modified
+median_all_region <- median_all_region |>
+  group_by(region) |>
+  mutate(median_price = median(weekly_price, na.rm = TRUE)) |>
+  ungroup() |>
+  mutate(region = fct_reorder(region, median_price, .desc = TRUE))
+
+ggplot(data = median_all_region, 
+       aes(x = study_year, y = weekly_price, color = region, group = region)) + 
+  geom_point(size = 1.6, alpha = 0.9) + 
+  facet_wrap(~age_group, nrow = 1) +
+  geom_smooth(method = "loess", se = TRUE, fill = "grey70", alpha = 0.25, linewidth = 1) +
+  scale_x_continuous(
+    breaks = seq(2008, 2018, by = 2),
+    limits = c(2008, 2018)
+  ) +
+  scale_y_continuous(
+    breaks = seq(100, 500, by = 50),
+    labels = scales::dollar_format(accuracy = 1),
+    limits = c(100, 500)
+  ) +
+  labs(
+    title = "Weekly Median Price for Center-Based Childcare ($)",
+    x = "Study Year",
+    y = "Median Weekly Price",
+    color = "California Region"
+  ) +
+  theme_minimal()
 
 ```
 
@@ -339,12 +735,39 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-1-ex-1
 
+#Challenge 2
+tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  scale_color_manual(values = tron_colors) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Y-Axis = Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+   )
+
 ```
 
 -   I can use non-standard colors (Example 2)
 
 ```{r}
 #| label: dvs-3-1-ex-2
+
+#Exerpt from Lab 4
+ggplot(data = median_all_region, 
+       aes(x = study_year, y = weekly_price, color = region, group = region)) + 
+  geom_point(size = 1.6, alpha = 0.9) + 
+  facet_wrap(~age_group, nrow = 1) +
+  geom_smooth(method = "loess", se = TRUE, fill = "grey70", alpha = 0.25, linewidth = 1) +
+  scale_x_continuous(
+    breaks = seq(2008, 2018, by = 2),
+    limits = c(2008, 2018)
+  )
 
 ```
 
@@ -353,6 +776,35 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-2
 
+# Challenge 2 (Modified to add geom_text())
+
+# Color Palette
+tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+
+# Compute summary stats for labeling
+species_labels <- surveys |>
+  group_by(species) |>
+  summarise(mean_weight = mean(weight, na.rm = TRUE))
+
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  # add text showing mean weight
+  geom_text(
+    data = species_labels,
+    aes(x = mean_weight, y = species, label = round(mean_weight, 1)),
+    color = "black", size = 3, vjust = -0.6
+  ) +
+  scale_color_manual(values = tron_colors) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Y-Axis = Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+  )
+
 ```
 
 -   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`)
@@ -360,6 +812,26 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-3
 
+#Replicated Challenge 4 with geom_ribbon()
+ggplot(statewide_by_year, aes(x = year, y = median_price, color = setting, group = setting)) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper, fill = setting),
+    alpha = 0.2, color = NA
+  ) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~age_group, nrow = 1) +
+  labs(
+    title = "CA Full-Time Median Weekly Childcare Prices (2008–2018)",
+    x = "Year",
+    y = "Median Weekly Price ($)",
+    color = "Setting",
+    fill = "Setting"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.spacing = unit(1.6, "lines"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )
 ```
 
 **DVS-4: I can calculate numerical summaries of variables.**
@@ -369,12 +841,36 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-4-summarize
 
+avg_rat_5 <- teacher_evals_clean |>
+  filter(question_no == 901) |>
+  group_by(teacher_id) |>
+    summarize(
+      avg_rat = mean(SET_score_avg, na.rm = TRUE),
+      n_courses = n_distinct(course_id)
+  ) |>
+  filter(n_courses >= 5) 
+
 ```
 
 -   Example using `across()`
 
 ```{r}
 #| label: dvs-4-across
+
+#Lab 4 (Modified)
+statewide_by_year <- ca_childcare_long |>
+  group_by(year, setting, age_group) |>
+  summarise(
+    across(
+      .cols = median_price,
+      .fns = list(
+        lower = ~quantile(.x, 0.25, na.rm = TRUE),
+        median = ~median(.x, na.rm = TRUE),
+        upper = ~quantile(.x, 0.75, na.rm = TRUE)
+      )
+    ),
+    .groups = "drop"
+  )
 
 ```
 
@@ -385,12 +881,38 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-5-1
 
+#Lab 3
+ques_12 <- teacher_evals_clean |>
+  filter(academic_degree %in% c("dr", "prof")) |>
+  group_by(teacher_id) |>
+  summarize(
+    avg_resp = mean(resp_share, na.rm = TRUE),
+    ...
+  )
+
+
+
 ```
 
 -   Example 2
 
 ```{r}
 #| label: dvs-5-2
+
+#Lab 4 (Modified)
+statewide_by_year <- ca_childcare_long |>
+  group_by(year, setting, age_group) |>
+  summarise(
+    across(
+      .cols = median_price,
+      .fns = list(
+        lower = ~quantile(.x, 0.25, na.rm = TRUE),
+        median = ~median(.x, na.rm = TRUE),
+        upper = ~quantile(.x, 0.75, na.rm = TRUE)
+      )
+    ),
+    .groups = "drop"
+  )
 
 ```
 
@@ -400,6 +922,9 @@ The following assignments satisfy the above criteria:
 
 ```{r}
 #| label: dvs-6-ex-1
+
+
+
 
 ```
 
@@ -424,12 +949,42 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-7-ex-1
 
+#Challenge 3
+tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+
+ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  scale_color_manual(values = tron_colors) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Rodent Weight by Species",
+    subtitle = "Y-Axis = Rodent Species",
+    x = "Rodent Weight (g)",
+    y = NULL,
+    caption = "Source: Portal Project Database"
+   )
+
 ```
 
 -   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`)
 
 ```{r}
 #| label: dvs-7-ex-2
+
+median_region <- ca_childcare |>
+  filter(study_year %in% c(2008, 2018)) |>
+  group_by(region, study_year) |>
+  summarise(
+    median_income = median(mhi_2018, na.rm = TRUE)
+  ) |>
+  pivot_wider(
+    names_from = study_year,
+    values_from = median_income,
+    names_prefix = "year_"
+  ) |>
+  arrange(desc(year_2018))
+
 
 ```
 
@@ -456,6 +1011,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-1-map-1
 
+#Not yet done in class
+
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
@@ -465,6 +1022,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-2-1
 
+#Not yet done in class
+
 ```
 
 -   Example 2: Function that operates on data frames
@@ -472,12 +1031,16 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-2-2
 
+#Not yet done in class
+
 ```
 
 -   Example 3: Function that operates on vectors *or* data frames
 
 ```{r}
 #| label: pe-2-3
+
+#Not yet done in class
 
 ```
 
@@ -495,12 +1058,16 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-3-map-1
 
+#Not yet done in class
+
 ```
 
 -   using a `map()` function with **more than one** input (e.g., `map_2()` or `pmap()`)
 
 ```{r}
 #| label: pe-3-map-2
+
+#Not yet done in class
 
 ```
 
@@ -545,12 +1112,21 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dsm-2-1
 
+#Challenge 3
+chisq.test(teacher_evals_compare$SET_level, teacher_evals_compare$sen_level)
+
+
 ```
 
 -   Example 2
 
 ```{r}
 #| label: dsm-2-2
+
+
+#Lab 2
+summary(aov(weight ~ species, data = surveys))
+
 
 ```
 
