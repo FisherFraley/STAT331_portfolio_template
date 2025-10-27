@@ -23,7 +23,7 @@ execute:
 ```{r}
 #| label: wd-1-csv-1
 
-# From Lab 2
+# From Lab 2, Question 1
 surveys <- read_csv(here::here("Week 2", "data", "surveys.csv"))
 
 
@@ -34,7 +34,7 @@ surveys <- read_csv(here::here("Week 2", "data", "surveys.csv"))
 ```{r}
 #| label: wd-1-csv-2
 
-#Lab 3
+#Lab 3, Ques 2
 teacher_evals <- read_csv(here::here("Week 3", "Data", "teacher_evals.csv"))
 ```
 
@@ -43,7 +43,7 @@ teacher_evals <- read_csv(here::here("Week 3", "Data", "teacher_evals.csv"))
 ```{r}
 #| label: wd-1-xlsx
 
-#PA 4
+#PA 4, Q1
 military <- read_xlsx("gov_spending_per_capita.xlsx",
                       sheet = "Share of Govt. spending",
                       skip  = 7,
@@ -61,7 +61,7 @@ military <- read_xlsx("gov_spending_per_capita.xlsx",
 ```{r}
 #| label: wd-2-ex-1
 
-#Lab 3
+#Lab 3, Ques 5
 teacher_evals_clean <- teacher_evals |>
   rename(sex = gender) |>
   filter(no_participants > 9) |>
@@ -81,7 +81,7 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: wd-2-ex-2
 
-#PA 3
+#PA 3, Q1
 colleges_clean1 <- colleges |>
   select(INSTNM,
          CITY,
@@ -104,7 +104,8 @@ colleges_clean1 <- colleges |>
 ```{r}
 #| label: wd-2-ex-3
 
-#Modified from PA 3
+#Modified from PA 3, Q3 to select these columns:
+#(TUITIONFEE_IN),(TUITIONFEE_OUT),(ADM_RATE)
 dream_college <- colleges_clean |>
   select(contains("TUITION"), ends_with("_RATE"), -ends_with("_ID"))
 
@@ -118,7 +119,7 @@ dream_college <- colleges_clean |>
 ```{r}
 #| label: wd-3-numeric-ex-1
 
-#Lab 3
+#Lab 3, Ques 9
 teacher_evals_clean |>
   group_by(course_id, teacher_id) |>
   summarize(num_q = n_distinct(question_no)) |>
@@ -132,7 +133,7 @@ teacher_evals_clean |>
 ```{r}
 #| label: wd-3-numeric-ex-2
 
-#Lab 3
+#Lab 3, Q10
 avg_rat_5 <- teacher_evals_clean |>
   filter(question_no == 901) |>
   group_by(teacher_id) |>
@@ -151,7 +152,7 @@ avg_rat_5 |>
 ```{r}
 #| label: wd-3-character
 
-#Lab 3
+#Lab 3, Q12
 ques_12 <- teacher_evals_clean |>
   filter(academic_degree %in% c("dr", "prof")) |>
   group_by(teacher_id) |> 
@@ -171,7 +172,7 @@ ques_12 <- teacher_evals_clean |>
 ```{r}
 #| label: wd-3-string
 
-#PA 5.1
+#PA 5.1, Q1
 m_message_data <- message_data |>
   filter(str_detect(Word, pattern = "^m"))
 m_message_data
@@ -182,7 +183,7 @@ m_message_data
 ```{r}
 #| label: wd-3-date
 
-#PA 5.2
+#PA 5.2, Q3
 suspects <- suspects |>
   filter(wday(Time.Spotted,
               label = TRUE,
@@ -201,7 +202,7 @@ suspects <- suspects |>
 ```{r}
 #| label: wd-4-numeric-ex-1
 
-#Challenge 3
+#Challenge 3, Q1
 teacher_evals_compare <- teacher_evals |>
   filter(question_no == 903) |>
   mutate(
@@ -218,7 +219,7 @@ teacher_evals_compare <- teacher_evals |>
 ```{r}
 #| label: wd-4-numeric-ex-2
 
-#PA 3
+#PA 3 Q3
 colleges_clean3 <- colleges_clean2 |>
   mutate(TUITIONFEE_IN  = as.numeric(TUITIONFEE_IN),
          TUITIONFEE_OUT = as.numeric(TUITIONFEE_OUT),
@@ -233,7 +234,7 @@ colleges_clean3 <- colleges_clean2 |>
 ```{r}
 #| label: wd-4-factor-ex-1
 
-#PA 3
+#PA 3, Q4
 colleges_clean4 <- colleges_clean3 |>
   mutate(CONTROL = as.factor(CONTROL),
          REGION  = as.factor(REGION))
@@ -245,7 +246,7 @@ colleges_clean4 <- colleges_clean3 |>
 ```{r}
 #| label: wd-4-factor-ex-2
 
-#Lab 4
+#Lab 4, Q7
 median_all_region |>
   pivot_longer(c(Infant, Toddler, Preschool),
                names_to = "age_group",
@@ -262,7 +263,7 @@ median_all_region |>
 ```{r}
 #| label: wd-4-string
 
-#PA 5.1
+#PA 5.1, Decode Message Q1
 message_data <- message_data |>
   mutate(Word = str_trim(Word, side = "both"))
 message_data
@@ -272,7 +273,7 @@ message_data
 
 ```{r}
 #| label: wd-4-date
-
+#PA 5.2, Q4
 sus_day <- dmy_hms("24-November-2022 12:00:00")
 force_tz(sus_day, tzone = "America/Los_Angeles")
 suspects <- suspects |>
@@ -288,7 +289,7 @@ suspects <- suspects |>
 ```{r}
 #| label: wd-5-left-ex-1
 
-#Challenge 4
+#Challenge 4 join
 ca_childcare <- counties |>
   filter(state_abbreviation == "CA") |>
   left_join(y = childcare_costs,
@@ -316,7 +317,7 @@ ca_childcare <- childcare_costs |>
 ```{r}
 #| label: wd-5-left-right-ex-2
 
-#Modified Challenge 4
+#Modified Challenge 4 left_join
 ca_childcare <- childcare_costs |>
   right_join(
     y = counties |> 
@@ -332,7 +333,7 @@ ca_childcare <- childcare_costs |>
 ```{r}
 #| label: wd-5-inner-ex-1
 
-#Modified Challenge 4
+#Modified Challenge 4 left_join
 ca_childcare <- counties |>
   filter(state_abbreviation == "CA") |>
   inner_join(
@@ -349,7 +350,7 @@ ca_childcare <- counties |>
 ```{r}
 #| label: wd-5-inner-ex-2
 
-#Modified Lab 4
+#Modified Lab 4, Q3
 ca_childcare <- counties |>
   filter(state_abbreviation == "CA") |>
   inner_join(
@@ -369,7 +370,7 @@ ca_childcare
 ```{r}
 #| label: wd-6-semi
 
-#Modified Lab 4
+#Modified Lab 4, Q2
 ca_childcare <- counties |>
   filter(state_abbreviation == "CA") |>
   semi_join(
@@ -386,7 +387,7 @@ ca_childcare <- counties |>
 ```{r}
 #| label: wd-6-anti
 
-#Modified Lab 4
+#Modified Lab 4, Q2
 ca_childcare <- counties |>
   filter(state_abbreviation == "CA") |>
   anti_join(
@@ -406,6 +407,7 @@ ca_childcare
 ```{r}
 #| label: wd-7-long
 
+#Challenge 4, Table summary
 ca_childcare_long <- ca_childcare |>
   pivot_longer(
     cols = mc_infant:mfcc_preschool,
@@ -421,6 +423,7 @@ ca_childcare_long <- ca_childcare |>
 ```{r}
 #| label: wd-7-wide
 
+#Lab 4, Q5
 median_region <- ca_childcare |>
   filter(study_year %in% c(2008, 2018)) |>
   group_by(region, study_year) |>
@@ -442,15 +445,15 @@ median_region <- ca_childcare |>
 
 The following assignments satisfy the above criteria:
 
--   Example 1 - Challenge 3
--   Example 2 - Lab 3
+-   Example 1 - Challenge 4
+-   Example 2 - Lab 2
 -   Example 3 - Lab 4
--   Example 4 - Challenge 4
--   Example 5 - Lab 5
+-   Example 4 - N/A
+-   Example 5 - N/A
 
 All follow this YAML format:\
 
----
+```{r}
 title: "Lab 4: Childcare Costs in California"
 author: "Fisher Fraley"
 date: "10/9/2025"
@@ -467,6 +470,10 @@ execute:
   error: true
   echo: true
   editor: source
+```
+
+---
+
 ---
 
 **R-2: I can write well documented and tidy code.**
@@ -502,7 +509,7 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 
 ##| label: teacher-course-asked-every-question
 
-# Lab 3
+# Lab 3, Q5
 # Count courses with all 9 evaluation questions
 teacher_evals_clean |>
   group_by(course_id, teacher_id) |>  # group by course and teacher
@@ -549,7 +556,7 @@ teacher_evals_clean |>
 ```{r}
 #| label: dvs-1-num
 
-# From Lab 2
+# From Lab 2, Ques 4
 ggplot(data = surveys,
        mapping = aes(x = weight, y = hindfoot_length)) +
   geom_point(alpha = .3) +
@@ -569,7 +576,7 @@ ggplot(data = surveys,
 ```{r}
 #| label: dvs-2-num-cat
 
-# From Lab 2
+# From Lab 2, Ques 4
 ggplot(data = surveys,
        mapping = aes(x = weight, y = hindfoot_length)) +
   geom_point(alpha = .3) +
@@ -589,7 +596,7 @@ ggplot(data = surveys,
 ```{r}
 #| label: dvs-2-cat
 
-#Challenge 3
+#Challenge 2 Plot
 tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
 
 ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
@@ -611,7 +618,7 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-2-date
 
-#Inspired by PA 5.2 to see 
+#Inspired by PA 5.2 Q3 
 suspects |>
   mutate(day = wday(Time.Spotted, label = TRUE, abbr = FALSE)) |>
   count(day) |>
@@ -636,7 +643,7 @@ suspects |>
 
 ```{r}
 #| label: dvs-2-ex-1
-# From: Challenge 3
+# From: Challenge 2 Plot
 # Color Palette: https://color.adobe.com/TRON-color-theme-6970180/
 tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
 
@@ -660,7 +667,7 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-2-ex-2
 
-#Challenge 2:
+#Challenge 2 plot (Modified to be accesible for anyones eyes with viridis package):
 library(viridis)
 
 ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
@@ -683,7 +690,7 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-2-ex-3
 
-#Challenge 4
+#Challenge 4 Plot
 labs(
   title = "Figure 1: CA Full-Time Median Weekly Childcare Prices (2008–2018)",
   x = "Year", y = "Median Weekly Price ($)", color = "Setting"
@@ -701,7 +708,7 @@ theme(
 ```{r}
 #| label: dvs-2-ex-4
 
-#Challenge 4
+#Challenge 4 Plot
 labs(
   title = "Figure 1: CA Full-Time Median Weekly Childcare Prices (2008–2018)",
   x = "Year", y = "Median Weekly Price ($)", color = "Setting"
@@ -718,7 +725,7 @@ theme(
 ```{r}
 #| label: dvs-2-ex-5
 
-#Lab 4 modified
+#Lab 4, Q9 modified
 median_all_region <- median_all_region |>
   group_by(region) |>
   mutate(median_price = median(weekly_price, na.rm = TRUE)) |>
@@ -756,7 +763,7 @@ ggplot(data = median_all_region,
 ```{r}
 #| label: dvs-3-1-ex-1
 
-#Challenge 2
+#Challenge 2 Plot
 tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
 
 ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
@@ -779,7 +786,7 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-3-1-ex-2
 
-#Exerpt from Lab 4
+#Exerpt from Lab 4, Q7
 ggplot(data = median_all_region, 
        aes(x = study_year, y = weekly_price, color = region, group = region)) + 
   geom_point(size = 1.6, alpha = 0.9) + 
@@ -862,6 +869,7 @@ ggplot(statewide_by_year, aes(x = year, y = median_price, color = setting, group
 ```{r}
 #| label: dvs-4-summarize
 
+#Lab 3, Q10
 avg_rat_5 <- teacher_evals_clean |>
   filter(question_no == 901) |>
   group_by(teacher_id) |>
@@ -878,7 +886,7 @@ avg_rat_5 <- teacher_evals_clean |>
 ```{r}
 #| label: dvs-4-across
 
-#Lab 4 (Modified)
+#Lab 4, Q8 (Modified to use across function)
 statewide_by_year <- ca_childcare_long |>
   group_by(year, setting, age_group) |>
   summarise(
@@ -902,7 +910,7 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: dvs-5-1
 
-#Lab 3
+#Lab 3, Q12
 ques_12 <- teacher_evals_clean |>
   filter(academic_degree %in% c("dr", "prof")) |>
   group_by(teacher_id) |>
@@ -920,7 +928,7 @@ ques_12 <- teacher_evals_clean |>
 ```{r}
 #| label: dvs-5-2
 
-#Lab 4 (Modified)
+#Lab 4, Q8 (Modified to use across function)
 statewide_by_year <- ca_childcare_long |>
   group_by(year, setting, age_group) |>
   summarise(
@@ -945,7 +953,7 @@ statewide_by_year <- ca_childcare_long |>
 #| label: dvs-6-ex-1
 
 
-#Lab 4
+#Lab 4, Q3
 statewide_by_year <- ca_childcare_long |>
   group_by(year, setting, age_group) |>
   summarise(median_price = median(median_price, na.rm = TRUE), .groups = "drop")
@@ -958,7 +966,7 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: dvs-6-ex-2
 
-#Inspired from Lab 4
+#Inspired from Lab 4, Q8 (Used Kable package to bold table titles)
 statewide_by_year |>
   select(year, setting, age_group, median_price) |>
   rename(
@@ -981,7 +989,7 @@ statewide_by_year |>
 
 ```{r}
 #| label: dvs-6-ex-3
-#Lab 4
+#Lab 4, Q6
 median_infant_region <- ca_childcare |>
 filter(study_year == 2018) |>
 group_by(region) |>
@@ -998,7 +1006,7 @@ summarize(median_infant = median(mc_infant, na.rm = TRUE),
 ```{r}
 #| label: dvs-7-ex-1
 
-#Challenge 3
+#Challenge 2 Plot
 tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
 
 ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
@@ -1021,6 +1029,7 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-7-ex-2
 
+#Lab 4, Q5
 median_region <- ca_childcare |>
   filter(study_year %in% c(2008, 2018)) |>
   group_by(region, study_year) |>
@@ -1046,7 +1055,7 @@ median_region <- ca_childcare |>
 ```{r}
 #| label: pe-1-one-call
 
-#Lab 4
+#Lab 4, Q4
 ca_childcare <- ca_childcare |> 
   mutate(county_name = str_remove(county_name, " County"),
   region = fct_collapse(
@@ -1072,7 +1081,7 @@ ca_childcare <- ca_childcare |>
 ```{r}
 #| label: pe-1-across
 
-#Lab 4 (Modified)
+#Lab 4, Q8 (Modified to use across function)
 statewide_by_year <- ca_childcare_long |>
   group_by(year, setting, age_group) |>
   summarise(
@@ -1136,7 +1145,7 @@ statewide_by_year <- ca_childcare_long |>
 #| label: pe-3-across
 
 
-#Lab 4 (Modified)
+#Lab 4, Q8 (Modified to use across function)
 statewide_by_year <- ca_childcare_long |>
   group_by(year, setting, age_group) |>
   summarise(
@@ -1178,6 +1187,7 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-4-1
 
+#PA 5.2, Q4 
 sus_day <- dmy_hms("24-November-2022 12:00:00")
 force_tz(sus_day, tzone = "America/Los_Angeles")
 suspects <- suspects |>
@@ -1192,7 +1202,7 @@ suspects
 ```{r}
 #| label: pe-4-2
 
-#Lab 4
+#Lab 4, Q8
 ques_8 <- ca_childcare |>
 filter(study_year == 2018, !is.na(mhi_2018), !is.na(mc_infant))
 
@@ -1237,7 +1247,7 @@ ggplot(data = ques_8, aes(x = mhi_2018, y = mc_infant)) +
 ```{r}
 #| label: dsm-2-1
 
-#Challenge 3
+#Challenge 3, Q3
 chisq.test(teacher_evals_compare$SET_level, teacher_evals_compare$sen_level)
 
 
@@ -1249,7 +1259,7 @@ chisq.test(teacher_evals_compare$SET_level, teacher_evals_compare$sen_level)
 #| label: dsm-2-2
 
 
-#Lab 2
+#Lab 2, Ques 17
 summary(aov(weight ~ species, data = surveys))
 
 
@@ -1260,7 +1270,7 @@ summary(aov(weight ~ species, data = surveys))
 ```{r}
 #| label: dsm-2-3
 
-#Lab 4
+#Lab 4, Q9
 reg_mod1 <- lm(mc_infant ~ mhi_2018, data = subset(ca_childcare, study_year == 2018))
 summary(reg_mod1)
 
