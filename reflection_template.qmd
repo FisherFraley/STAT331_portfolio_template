@@ -1310,4 +1310,4 @@ Lab 3\^
 
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
 
-hroughout this class, I’ve grown as a collaborator by thinking more intentionally about what my peers can learn from my feedback. Instead of simply saying what I liked or didn’t like, I began giving specific, detailed comments that explained *why* something worked or how it could be improved. This approach helped my partners make immediate changes and learn from the process, while also improving my own understanding as I explained my reasoning.
+Throughout this class, I’ve grown as a collaborator by thinking more intentionally about what my peers can learn from my feedback. Instead of simply saying what I liked or didn’t like, I began giving specific, detailed comments that explained *why* something worked or how it could be improved. This approach helped my partners make immediate changes and learn from the process, while also improving my own understanding as I explained my reasoning.
