@@ -43,14 +43,7 @@ teacher_evals <- read_csv(here::here("Week 3", "Data", "teacher_evals.csv"))
 ```{r}
 #| label: wd-1-xlsx
 
-#PA 4, Q1
-military <- read_xlsx("gov_spending_per_capita.xlsx",
-                      sheet = "Share of Govt. spending",
-                      skip  = 7,
-                      n_max = 190,
-                      na = c(". .", "xxx", ". . ")
 
-                      )
 
 ```
 
@@ -81,21 +74,6 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: wd-2-ex-2
 
-#PA 3, Q1
-colleges_clean1 <- colleges |>
-  select(INSTNM,
-         CITY,
-         STABBR,
-         ZIP,
-         ADM_RATE,
-         SAT_AVG,
-         UGDS,
-         TUITIONFEE_IN,
-         TUITIONFEE_OUT,
-         CONTROL,
-         REGION)
-
-
 
 ```
 
@@ -103,11 +81,6 @@ colleges_clean1 <- colleges |>
 
 ```{r}
 #| label: wd-2-ex-3
-
-#Modified from PA 3, Q3 to select these columns:
-#(TUITIONFEE_IN),(TUITIONFEE_OUT),(ADM_RATE)
-dream_college <- colleges_clean |>
-  select(contains("TUITION"), ends_with("_RATE"), -ends_with("_ID"))
 
 
 ```
@@ -172,10 +145,16 @@ ques_12 <- teacher_evals_clean |>
 ```{r}
 #| label: wd-3-string
 
-#PA 5.1, Q1
-m_message_data <- message_data |>
-  filter(str_detect(Word, pattern = "^m"))
-m_message_data
+
+#Lab 5, Filtering persons based on address and name from crime report.
+witness1 <- person |>
+  filter(address_street_name == "Northwestern Dr")
+witness2 <- person |>
+  filter(address_street_name == "Franklin Ave" & 
+           str_detect(name, "Annabel"))
+witnesses <- bind_rows(witness1, witness2)
+
+witnesses
 ```
 
 -   Date (example must use functions from **lubridate**)
@@ -183,25 +162,21 @@ m_message_data
 ```{r}
 #| label: wd-3-date
 
-#PA 5.2, Q3
-suspects <- suspects |>
-  filter(wday(Time.Spotted,
-              label = TRUE,
-              abbr = FALSE) != "Tuesday" &
-        wday(Time.Spotted,
-              label = TRUE,
-              abbr = FALSE) != "Thursday")
+#Lab 5 (Modified)- Finding members who checked in Jan 9th 2018 and have plate number H42W + reading interview of said member.
 
+gym_suspect <- gym_suspect |>
+  inner_join(get_fit_now_check_in, by = c("id" = "membership_id")) |>
+  mutate(check_in_date = ymd(check_in_date)) |>        
+  filter(check_in_date == ymd("2018-01-09")) |>       
+  inner_join(person, by = c("person_id" = "id")) |>
+  inner_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(str_detect(plate_number, "H42W"))
 
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
 -   Numeric Example 1
-
-**Feedback: See the instructions for how sen_level should be calculated.**
-
--   Calculated sen level correctly from the instructions
 
 ```{r}
 #| label: wd-4-numeric-ex-1
@@ -210,10 +185,13 @@ suspects <- suspects |>
 teacher_evals_compare <- teacher_evals |>
   filter(question_no == 903) |>
   mutate(
-    SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
-    sen_level = if_else(seniority <= 4, "junior", "senior")
-  ) |>
-  select(course_id, SET_level, sen_level)
+   SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+   sen_level = case_when(
+      seniority <= 4 ~ "junior",
+      seniority >= 5 & seniority <= 8 ~ "senior",
+      seniority > 8 ~ "very senior"
+    )) |>
+   select(course_id, SET_level, sen_level)
 
 
 ```
@@ -223,13 +201,13 @@ teacher_evals_compare <- teacher_evals |>
 ```{r}
 #| label: wd-4-numeric-ex-2
 
-#PA 3 Q3
-colleges_clean3 <- colleges_clean2 |>
-  mutate(TUITIONFEE_IN  = as.numeric(TUITIONFEE_IN),
-         TUITIONFEE_OUT = as.numeric(TUITIONFEE_OUT),
-         SAT_AVG        = as.numeric(SAT_AVG),
-         UGDS           = as.numeric(UGDS),
-         ADM_RATE       = as.numeric(ADM_RATE))
+#Lab 7 Q3:
+fish_file <- fish_file |>
+  mutate(trip = if_else(trip == 1, "Trip 1",
+                 if_else(trip == 2, "Trip 2", as.character(trip))))
+
+
+
 
 ```
 
@@ -238,10 +216,24 @@ colleges_clean3 <- colleges_clean2 |>
 ```{r}
 #| label: wd-4-factor-ex-1
 
-#PA 3, Q4
-colleges_clean4 <- colleges_clean3 |>
-  mutate(CONTROL = as.factor(CONTROL),
-         REGION  = as.factor(REGION))
+# Challenge 4 (Modified to change factor to fct_relevel())
+ca_childcare_long <- ca_childcare |>
+  pivot_longer(
+    cols = mc_infant:mfcc_preschool,
+    names_to = c("setting_raw", "age_group"),
+    names_pattern = "m(c|fcc)_(infant|toddler|preschool)",
+    values_to = "median_price"
+  ) |>
+  mutate(
+    setting = factor(setting_raw) |>
+      fct_recode(
+        "Center-based"      = "c",
+        "Family childcare"  = "fcc"
+      ),
+    age_group = fct_relevel(age_group, "infant", "toddler", "preschool"),
+    year = as.integer(study_year)
+  ) |>
+  select(-setting_raw)
 
 ```
 
@@ -250,14 +242,24 @@ colleges_clean4 <- colleges_clean3 |>
 ```{r}
 #| label: wd-4-factor-ex-2
 
-#Lab 4, Q7
-median_all_region |>
-  pivot_longer(c(Infant, Toddler, Preschool),
-               names_to = "age_group",
-               values_to = "weekly_price") |>
+# Challenge 4 (Modified to change factor to fct_relevel())
+ca_childcare_long <- ca_childcare |>
+  pivot_longer(
+    cols = mc_infant:mfcc_preschool,
+    names_to = c("setting_raw", "age_group"),
+    names_pattern = "m(c|fcc)_(infant|toddler|preschool)",
+    values_to = "median_price"
+  ) |>
   mutate(
-    age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))
-  )
+    setting = factor(setting_raw) |>
+      fct_recode(
+        "Center-based"      = "c",
+        "Family childcare"  = "fcc"
+      ),
+    age_group = fct_relevel(age_group, "infant", "toddler", "preschool"),
+    year = as.integer(study_year)
+  ) |>
+  select(-setting_raw)
 
 
 ```
@@ -267,22 +269,38 @@ median_all_region |>
 ```{r}
 #| label: wd-4-string
 
-#PA 5.1, Decode Message Q1
-message_data <- message_data |>
-  mutate(Word = str_trim(Word, side = "both"))
-message_data
+#Lab 5 (Modified) - Filter persons based on address and name from crime report descriptions. 
+witnesses <- person |>
+  filter(
+    address_street_name == "Northwestern Dr" |
+      (address_street_name == "Franklin Ave" & str_detect(name, "Annabel"))
+  ) |>
+  mutate(
+    address_street_name_clean = str_replace(address_street_name, "Dr$", "Drive"),
+    name_length = str_length(name),
+    has_middle_initial = str_detect(name, "\\b[A-Z]\\.")
+  )
+
+witnesses
+
+
+
 ```
 
 -   Date (example must use functions from **lubridate**)
 
 ```{r}
 #| label: wd-4-date
-#PA 5.2, Q4
-sus_day <- dmy_hms("24-November-2022 12:00:00")
-force_tz(sus_day, tzone = "America/Los_Angeles")
-suspects <- suspects |>
-  filter(Time.Spotted %within% interval(sus_day + weeks(5),
-                  sus_day - weeks(5)))
+
+#Lab 5 (Modified)- Finding members who checked in Jan 9th 2018 and have plate number H42W + reading interview of said member.
+
+gym_suspect <- gym_suspect |>
+  inner_join(get_fit_now_check_in, by = c("id" = "membership_id")) |>
+  mutate(check_in_date = ymd(check_in_date)) |>        
+  filter(check_in_date == ymd("2018-01-09")) |>       
+  inner_join(person, by = c("person_id" = "id")) |>
+  inner_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(str_detect(plate_number, "H42W"))
 
 ```
 
@@ -307,12 +325,10 @@ ca_childcare <- counties |>
 ```{r}
 #| label: wd-5-right
 
-# Challenge 4 (same output using right_join)
-ca_childcare <- childcare_costs |>
-  right_join(y = counties |> 
-               filter(state_abbreviation == "CA"),
-             by = join_by(county_fips_code == county_fips_code))
-
+#Lab 5, Join SQL symphony suspect and suspects who match the description.
+final_suspect <- sql_suspect |>
+  right_join(potential, by = c("person_id" = "id")) |>
+  select(name, height, hair_color, car_make, car_model)
 
 ```
 
@@ -321,14 +337,13 @@ ca_childcare <- childcare_costs |>
 ```{r}
 #| label: wd-5-left-right-ex-2
 
-#Modified Challenge 4 left_join
-ca_childcare <- childcare_costs |>
-  right_join(
-    y = counties |> 
-      filter(state_abbreviation == "CA"),
-    by = join_by(county_fips_code == county_fips_code)
-  ) |>
-  select(county_fips_code, county_name, study_year, mc_infant:mfcc_preschool)
+#Lab 5 (Modified a inner join to make a left join), After some quick investigations 
+#it turns out Jeremy Bowers was hired...
+potential <- person |>
+  left_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(height >= 65, height <= 67,
+         hair_color == "red",
+         car_make == "Tesla", car_model == "Model S")
 
 ```
 
@@ -337,15 +352,15 @@ ca_childcare <- childcare_costs |>
 ```{r}
 #| label: wd-5-inner-ex-1
 
-#Modified Challenge 4 left_join
-ca_childcare <- counties |>
-  filter(state_abbreviation == "CA") |>
-  inner_join(
-    y = childcare_costs,
-    by = join_by(county_fips_code == county_fips_code)
-  ) |>
-  select(county_fips_code, county_name, study_year, mc_infant:mfcc_preschool)
+#Lab 5, Finding members who checked in Jan 9th 2018 and have plate number H42W + reading interview of said member.
 
+gym_suspect <- gym_suspect |>
+  inner_join(get_fit_now_check_in, by = c("id" = "membership_id")) |>
+  filter(check_in_date == 20180109) |>                 # Jan 9
+  inner_join(person, by = c("person_id" = "id")) |>
+  inner_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(str_detect(plate_number, "H42W"))
+gym_suspect
 
 ```
 
@@ -354,15 +369,11 @@ ca_childcare <- counties |>
 ```{r}
 #| label: wd-5-inner-ex-2
 
-#Modified Lab 4, Q3
-ca_childcare <- counties |>
-  filter(state_abbreviation == "CA") |>
-  inner_join(
-    y = childcare_costs,
-    by = join_by(county_fips_code == county_fips_code)
-  )
-
-ca_childcare
+#Lab 5, Join SQL symphony suspect and suspects who match the description.
+final_suspect <- potential |>
+  inner_join(sql_suspect, by = c("id" = "person_id")) |>
+  select(name, height, hair_color, car_make, car_model)
+final_suspect
 
 
 ```
@@ -374,13 +385,12 @@ ca_childcare
 ```{r}
 #| label: wd-6-semi
 
-#Modified Lab 4, Q2
-ca_childcare <- counties |>
-  filter(state_abbreviation == "CA") |>
-  semi_join(
-    y = childcare_costs,
-    by = join_by(county_fips_code == county_fips_code)
-  )
+#Lab 5 Join witnesses and interview with person_id key 
+interviews <- interview |>
+  semi_join(witnesses, by = c("person_id" = "id")) |>
+  select(person_id, transcript)
+interviews
+
 
 
 
@@ -391,17 +401,21 @@ ca_childcare <- counties |>
 ```{r}
 #| label: wd-6-anti
 
-#Modified Lab 4, Q2
-ca_childcare <- counties |>
-  filter(state_abbreviation == "CA") |>
+#Lab 5, Modified to demonstrate anti_join and rule out suspects.
+
+# gold 48Z members
+gym_suspect <- get_fit_now_member |>
+  filter(membership_status == "gold",
+         str_detect(id, "^(48Z)"))
+
+# who did NOT check in on Jan 9, 2018?
+no_jan9_checkin <- gym_suspect |>
   anti_join(
-    y = childcare_costs,
-    by = join_by(county_fips_code == county_fips_code)
+    get_fit_now_check_in |> filter(check_in_date == 20180109),
+    by = c("id" = "membership_id")
   )
 
-ca_childcare
-
-
+no_jan9_checkin
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
@@ -432,14 +446,19 @@ median_region <- ca_childcare |>
   filter(study_year %in% c(2008, 2018)) |>
   group_by(region, study_year) |>
   summarise(
-    median_income = median(mhi_2018, na.rm = TRUE)
+    median_income = median(mhi_2018, na.rm = TRUE),
+    .groups = "drop"
   ) |>
   pivot_wider(
     names_from = study_year,
     values_from = median_income,
     names_prefix = "year_"
   ) |>
-  arrange(desc(year_2018))
+  rename(
+    median_income_2008 = year_2008,
+    median_income_2018 = year_2018
+  ) |>
+  arrange(desc(median_income_2018))
 
 ```
 
@@ -476,9 +495,9 @@ execute:
   editor: source
 ```
 
----
+------------------------------------------------------------------------
 
----
+------------------------------------------------------------------------
 
 **R-2: I can write well documented and tidy code.**
 
