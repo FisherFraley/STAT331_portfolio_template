@@ -471,8 +471,8 @@ The following assignments satisfy the above criteria:
 -   Example 1 - Challenge 4
 -   Example 2 - Lab 2
 -   Example 3 - Lab 4
--   Example 4 - N/A
--   Example 5 - N/A
+-   Example 4 - Lab 7
+-   Example 5 - Challenge 7
 
 All follow this YAML format:\
 
@@ -548,7 +548,19 @@ teacher_evals_clean |>
 ```{r}
 #| label: r-2-3
 
-#Not done yet in class
+#Lab 7, Q4
+rescale_01 <- function(vect) {
+  if (!is.numeric(vect)) { # Check that input is numeric
+    stop("`vect` must be numeric.", call. = FALSE)
+  }
+  if (length(vect) <= 1) { # Check that input length > 1
+    stop("`vect` must have more than one value.", call. = FALSE)
+  }
+  # Carry on
+  rng <- range(vect, na.rm = TRUE)
+  (vect - rng[1]) / (rng[2] - rng[1])
+}
+
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
@@ -558,7 +570,18 @@ teacher_evals_clean |>
 ```{r}
 #| label: r-3-example
 
-#Not done yet in class
+#Lab 7, Q4
+rescale_01 <- function(vect) {
+  if (!is.numeric(vect)) { # Check that input is numeric
+    stop("`vect` must be numeric.", call. = FALSE)
+  }
+  if (length(vect) <= 1) { # Check that input length > 1
+    stop("`vect` must have more than one value.", call. = FALSE)
+  }
+  # Carry on
+  rng <- range(vect, na.rm = TRUE)
+  (vect - rng[1]) / (rng[2] - rng[1])
+}
 ```
 
 -   Example (function stops)
@@ -566,8 +589,24 @@ teacher_evals_clean |>
 ```{r}
 #| label: r-3-function-stops
 
-#Not done yet in class
-
+#Challenge 7, Q3
+fix_to_na <- function(vect, min, max) {
+  
+  if (!is.numeric(vect)) { # Check that vect is numeric
+    stop("`vect` must be numeric.", call. = FALSE)
+  }
+  if (!is.numeric(min)) { # Check that min is numeric
+    stop("`min`  must be numeric.", call. = FALSE)
+  }
+  if (!is.numeric(max)) { # Check that max is numeric
+    stop("`max` must be numeric.", call. = FALSE)
+  }
+  case_when(
+    vect < min ~ NA_real_,
+    vect > max ~ NA_real_,
+    TRUE ~ vect
+  )
+}
 ```
 
 ## Data Visualization & Summarization
@@ -599,17 +638,31 @@ ggplot(data = surveys,
 ```{r}
 #| label: dvs-2-num-cat
 
-# From Lab 2, Ques 4
-ggplot(data = surveys,
-       mapping = aes(x = weight, y = hindfoot_length)) +
-  geom_point(alpha = .3) +
-  facet_wrap(~species) +
+# From Lab 7, Ques 3
+
+# Rainbow Trout Color Pallete: https://www.color-hex.com/color-palette/1024087
+trout_palette <- c("#268612","#21a1cf", "#e33d79", "#d0c8c8", "#46b415")
+
+missing_fish |>
+  ggplot(aes(x = factor(year), fill = factor(section))) +
+  geom_bar(position = "dodge") +
+  
+  facet_wrap(~trip) +
+  scale_fill_manual(values = trout_palette) +
   labs(
-    title = "Hindfoot Length by Weight For Different Species of Rodents",
-    x = "Weight (grams)",
-    y = NULL,
-    subtitle = "Y-Axis = Hindfoot length (mm)", 
-    caption = "Source: Portal Project Database"
+    x = "Year",
+    y = "Count of Missing Values",
+    fill = "Section",
+    title = "Missing Weight Measurements in Fish Data by Year, 
+            Section, and Trip (1989 - 2006)",
+    subtitle = "Only fish missing weight measurements are shown"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
 ```
@@ -619,21 +672,24 @@ ggplot(data = surveys,
 ```{r}
 #| label: dvs-2-cat
 
-#Challenge 2 Plot
-tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+#Challenge 7, Q5
+# Rainbow Trout Color Pallete: https://www.color-hex.com/color-palette/1024087
+trout_palette <- c("#268612","#21a1cf", "#e33d79", "#d0c8c8", "#46b415")
 
-ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
-  geom_boxplot(outlier.shape = NA, width = 0.6) +
-  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
-  scale_color_manual(values = tron_colors) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+fish_plot <- fish |>
+  drop_na(condition_index, species, section, year)
+
+ggplot(fish_plot, aes(year, condition_index, color = species)) +
+  geom_point(alpha = 0.35, size = 1.6) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.6, linewidth = 1) +  
+  facet_wrap(~ section) +
+  scale_color_manual(values = trout_palette) +
+  coord_cartesian(ylim = c(0, 4)) +
   labs(
-    title = "Rodent Weight by Species",
-    subtitle = "Rodent Species",
-    x = "Rodent Weight (g)",
-    y = NULL,
-    caption = "Source: Portal Project Database"
-   )
+    title = "Condition Index (K) Over Time by Section",
+    x = "Year", y = "Condition Index (K)", color = "Species") +
+  theme_minimal() +
+  theme(legend.position = "bottom", strip.text = element_text(face = "bold"))
 ```
 
 -   Dates (time series plot)
@@ -641,20 +697,29 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-2-date
 
-#Inspired by PA 5.2 Q3 
-suspects |>
-  mutate(day = wday(Time.Spotted, label = TRUE, abbr = FALSE)) |>
-  count(day) |>
-  ggplot(aes(x = day, y = n, fill = day)) +
-  geom_col(show.legend = FALSE) +
-  labs(
-    title = "Number of People in the Gym by Day of the Week",
-    x = "Day of the Week",
-    y = "Number of People"
+#Lab 4, Q7
+ggplot(data = median_all_region, aes(x = study_year, y = weekly_price, color = region, group = region)) + 
+  geom_point(size = 1.6, alpha = 0.9) + 
+  facet_wrap(~age_group, nrow = 1) +
+  geom_smooth(method = "loess", se = TRUE, fill = "grey70", alpha = 0.25, linewidth = 1) +
+  scale_x_continuous(
+    limits = c(2008, 2018),
+    breaks = seq(2008, 2018, by = 2),
+    expand = c(0, 0)
   ) +
-  theme_minimal() +
+  scale_y_continuous(
+    limits = c(100, 500),
+    breaks = seq(100, 500, by = 100),
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = "Weekly Median Price for Center-Based Childcare ($)",
+    x = "Study Year",
+    y = "Median weekly price",
+    color = "California Region"
+  ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    panel.spacing = unit(1.6, "lines")
   )
 
 
@@ -666,22 +731,19 @@ suspects |>
 
 ```{r}
 #| label: dvs-2-ex-1
-# From: Challenge 2 Plot
-# Color Palette: https://color.adobe.com/TRON-color-theme-6970180/
-tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
 
-ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
-  geom_boxplot(outlier.shape = NA, width = 0.6) +
-  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
-  scale_color_manual(values = tron_colors) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+#Challenge 7, Q5
+ggplot(fish_plot, aes(year, condition_index, color = species)) +
+  geom_point(alpha = 0.35, size = 1.6) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.6, linewidth = 1) +  
+  facet_wrap(~ section) +
+  scale_color_manual(values = trout_palette) +
+  coord_cartesian(ylim = c(0, 4)) +
   labs(
-    title = "Rodent Weight by Species",
-    subtitle = "Y-Axis = Rodent Species",
-    x = "Rodent Weight (g)",
-    y = NULL,
-    caption = "Source: Portal Project Database"
-   )
+    title = "Condition Index (K) Over Time by Section",
+    x = "Year", y = "Condition Index (K)", color = "Species") +
+  theme_minimal() +
+  theme(legend.position = "bottom", strip.text = element_text(face = "bold"))
 
 ```
 
@@ -691,6 +753,10 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 #| label: dvs-2-ex-2
 
 #Challenge 2 plot (Modified to be accesible for anyones eyes with viridis package):
+# I realized my tron colors where not color blind friendly by looking up resources on the web
+# and colormatching from the plot. I found a resource called viridis that has color palletes 
+# that are all color blind friendly. By using scale_color_viridis_d I incorporated colors 
+# accessible to everyones eyes.
 library(viridis)
 
 ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
@@ -732,14 +798,21 @@ theme(
 #| label: dvs-2-ex-4
 
 #Challenge 4 Plot
-labs(
-  title = "Figure 1: CA Full-Time Median Weekly Childcare Prices (2008–2018)",
-  x = "Year", y = "Median Weekly Price ($)", color = "Setting"
-) +
-theme(
-  panel.spacing = unit(1.6, "lines"),
-  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
-)
+ggplot(statewide_by_year, aes(x = year, y = median_price, color = setting, group = setting)) +
+  geom_line() +
+  facet_wrap(~ age_group) +
+  scale_y_continuous(labels = scales::dollar) +
+  labs(
+    title = "Figure 1: CA Full-Time Median Weekly Childcare Prices (2008–2018)",
+    subtitle = "Median Weekly Price ($)",
+    x = "Year",
+    y = "Median Weekly Price",
+    color = "Setting"
+  ) +
+  theme(
+    panel.spacing = unit(1.6, "lines"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )
 
 ```
 
@@ -750,10 +823,9 @@ theme(
 
 #Lab 4, Q9 modified
 median_all_region <- median_all_region |>
-  group_by(region) |>
-  mutate(median_price = median(weekly_price, na.rm = TRUE)) |>
-  ungroup() |>
-  mutate(region = fct_reorder(region, median_price, .desc = TRUE))
+  mutate(
+    region = fct_reorder2(region, study_year, weekly_price)
+  )
 
 ggplot(data = median_all_region, 
        aes(x = study_year, y = weekly_price, color = region, group = region)) + 
@@ -809,16 +881,23 @@ ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
 ```{r}
 #| label: dvs-3-1-ex-2
 
-#Exerpt from Lab 4, Q7
-ggplot(data = median_all_region, 
-       aes(x = study_year, y = weekly_price, color = region, group = region)) + 
-  geom_point(size = 1.6, alpha = 0.9) + 
-  facet_wrap(~age_group, nrow = 1) +
-  geom_smooth(method = "loess", se = TRUE, fill = "grey70", alpha = 0.25, linewidth = 1) +
-  scale_x_continuous(
-    breaks = seq(2008, 2018, by = 2),
-    limits = c(2008, 2018)
-  )
+#Challenge 7, Q5
+trout_palette <- c("#268612","#21a1cf", "#e33d79", "#d0c8c8", "#46b415")
+
+fish_plot <- fish |>
+  drop_na(condition_index, species, section, year)
+
+ggplot(fish_plot, aes(year, condition_index, color = species)) +
+  geom_point(alpha = 0.35, size = 1.6) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.6, linewidth = 1) +  
+  facet_wrap(~ section) +
+  scale_color_manual(values = trout_palette) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(
+    title = "Condition Index (K) Over Time by Section",
+    x = "Year", y = "Condition Index (K)", color = "Species") +
+  theme_minimal() +
+  theme(legend.position = "bottom", strip.text = element_text(face = "bold"))
 
 ```
 
@@ -827,34 +906,29 @@ ggplot(data = median_all_region,
 ```{r}
 #| label: dvs-3-2
 
-# Challenge 2 (Modified to add geom_text())
+# Lab 4 Q8, uses geom_text to display the top 3 counties
+ques_8 <- ca_childcare |>
+filter(study_year == 2018, !is.na(mhi_2018), !is.na(mc_infant))
 
-# Color Palette
-tron_colors <- c("#DF7212", "#6FC3DF", "#E6FFFF", "#FFE64D", "#0C141F")
+label_pts <- ques_8 |>
+  slice_max(mc_infant, n = 3)
 
-# Compute summary stats for labeling
-species_labels <- surveys |>
-  group_by(species) |>
-  summarise(mean_weight = mean(weight, na.rm = TRUE))
-
-ggplot(data = surveys, aes(x = weight, y = species, color = sex)) +
-  geom_boxplot(outlier.shape = NA, width = 0.6) +
-  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
-  # add text showing mean weight
+ggplot(data = ques_8, aes(x = mhi_2018, y = mc_infant)) + 
+  geom_point(aes(color = region)) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
   geom_text(
-    data = species_labels,
-    aes(x = mean_weight, y = species, label = round(mean_weight, 1)),
-    color = "black", size = 3, vjust = -0.6
+    data = label_pts,
+    aes(label = county_name),
+    vjust = -0.5, size = 3,
+    show.legend = FALSE
   ) +
-  scale_color_manual(values = tron_colors) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
   labs(
-    title = "Rodent Weight by Species",
-    subtitle = "Y-Axis = Rodent Species",
-    x = "Rodent Weight (g)",
-    y = NULL,
-    caption = "Source: Portal Project Database"
-  )
+    title = "Relationship Between Median Household Income 
+    and Infant Childcare Price in California (2018)",
+    x = "Median Household Income (2018 dollars)",
+    y = "Median Weekly Infant Care Price (Center-Based)"
+  ) +
+  theme_minimal()
 
 ```
 
@@ -892,15 +966,23 @@ ggplot(statewide_by_year, aes(x = year, y = median_price, color = setting, group
 ```{r}
 #| label: dvs-4-summarize
 
-#Lab 3, Q10
-avg_rat_5 <- teacher_evals_clean |>
-  filter(question_no == 901) |>
-  group_by(teacher_id) |>
-    summarize(
-      avg_rat = mean(SET_score_avg, na.rm = TRUE),
-      n_courses = n_distinct(course_id)
-  ) |>
-  filter(n_courses >= 5) 
+#Lab 3, Q6
+teacher_evals_clean <- teacher_evals |>
+  rename(sex = gender) |>
+  filter(no_participants > 9) |>
+  mutate(
+    teacher_id = as.character(teacher_id),
+    course_id = as.character(course_id)) |>
+  select(
+    course_id, teacher_id, question_no, 
+    no_participants, resp_share, SET_score_avg, 
+    percent_failed_cur, academic_degree, seniority, sex)
+
+teacher_evals_clean |>
+  summarize(
+    unique_teachers = n_distinct(teacher_id),
+    unique_courses = n_distinct(course_id)
+  )
 
 ```
 
