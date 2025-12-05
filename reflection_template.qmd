@@ -43,7 +43,14 @@ teacher_evals <- read_csv(here::here("Week 3", "Data", "teacher_evals.csv"))
 ```{r}
 #| label: wd-1-xlsx
 
-
+#PA 4 Data Import
+library(readxl)
+military <- read_xlsx("gov_spending_per_capita.xlsx",
+                      sheet = ,
+                      skip  = ,
+                      n_max = ,
+                      na = c()
+                      )
 
 ```
 
@@ -74,6 +81,23 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: wd-2-ex-2
 
+#Challenge 4
+ca_childcare_long <- ca_childcare |>
+  pivot_longer(
+    cols = mc_infant:mfcc_preschool,
+    names_to = c("setting_raw", "age_group"),
+    names_pattern = "m(c|fcc)_(infant|toddler|preschool)",
+    values_to = "median_price"
+  ) |>
+  mutate(
+    setting = recode(setting_raw, "c" = "Center-based", "fcc" = "Family"),
+    age_group = factor(age_group, levels = c("infant", "toddler", "preschool")),
+    year = as.integer(study_year)
+  ) |>
+  select(-setting_raw)
+
+ca_childcare_long
+
 
 ```
 
@@ -81,6 +105,13 @@ teacher_evals_clean <- teacher_evals |>
 
 ```{r}
 #| label: wd-2-ex-3
+
+#Challenge 4
+ca_childcare <- counties |>
+  filter(state_abbreviation == "CA") |>
+  left_join(y = childcare_costs, 
+             by = join_by(county_fips_code == county_fips_code)) |>
+  select(county_fips_code, county_name, study_year, starts_with("mc_"), starts_with("mfcc_"))
 
 
 ```
@@ -1058,11 +1089,19 @@ statewide_by_year <- ca_childcare_long |>
 #| label: dvs-6-ex-1
 
 
-#Lab 4, Q3
-statewide_by_year <- ca_childcare_long |>
-  group_by(year, setting, age_group) |>
-  summarise(median_price = median(median_price, na.rm = TRUE), .groups = "drop")
+#Lab 10 Q2, 
+summary <- res_df |>
+  count(matches) |>
+  mutate(props = n / sum(n))
 
+summary_tbl <- summary |>
+  gt() |>
+  fmt_percent(columns = props, decimals = 1) |>
+  cols_label(
+    matches = "Number of Matches",
+    n = "Count",
+    props = "Proportion"
+  )
 
 ```
 
@@ -1071,22 +1110,22 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: dvs-6-ex-2
 
-#Inspired from Lab 4, Q8 (Used Kable package to bold table titles)
-statewide_by_year |>
-  select(year, setting, age_group, median_price) |>
-  rename(
-    Year = year,
-    Setting = setting,
-    `Age Group` = age_group,
-    `Median Weekly Price ($)` = median_price
+#Lab 9 Q3
+surveys |>
+  map_chr(~ class(.x)[1]) |>
+  enframe(name = "Variable", value = "Data Type") |>
+  mutate(`Data Type` = stringr::str_to_lower(`Data Type`)) |>
+  arrange(Variable) |>
+  gt() |>
+  tab_header(
+    title = md("**Table 1. Data Types of Variables in the `surveys` Dataset**"),
+    subtitle = "Each variable’s R data type, arranged alphabetically"
   ) |>
-  kable(
-    caption = "Table 1. California Childcare Median Weekly Prices (2008–2018)",
-    digits = 0,
-    align = "c"
+  cols_label(
+    Variable = md("**Variable**"),
+    `Data Type` = md("**Data Type**")
   ) |>
-  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) |>
-  row_spec(0, bold = TRUE)
+  tab_options(table.font.size = px(13))
 
 ```
 
@@ -1094,14 +1133,56 @@ statewide_by_year |>
 
 ```{r}
 #| label: dvs-6-ex-3
-#Lab 4, Q6
-median_infant_region <- ca_childcare |>
-filter(study_year == 2018) |>
-group_by(region) |>
-summarize(median_infant = median(mc_infant, na.rm = TRUE),
-          median_income = median(mhi_2018, na.rm = TRUE),
-.groups = "drop") |>
-  arrange(desc(median_infant))
+
+#Lab 9 Q6
+tbl <- evals |>
+  select(academic_degree, sen_level, sex) |>
+  pivot_longer(everything(), names_to = "demographic", values_to = "group") |>
+  mutate(
+    demographic = recode(demographic,
+      "academic_degree" = "Academic Degree",
+      "sen_level"       = "Seniority",
+      "sex"             = "Sex"
+    )
+  ) |>
+  filter(!is.na(group)) |>
+  count(demographic, group, name = "Count") |>
+  group_by(demographic) |>
+  mutate(Percent = Count / sum(Count)) |>
+  ungroup() |>
+  # ordering group names
+  mutate(
+    demographic = factor(demographic, levels = c("Seniority","Sex","Academic Degree")),
+    group = factor(group,
+      levels = c("junior","senior","very senior","Female","Male",
+                 "No Degree","Masters","Doctorate","Tenured Professor"))
+  ) |>
+  arrange(demographic, group)
+
+tbl_display <- tbl |>
+  mutate(Percent = percent(Percent, accuracy = 0.1))
+
+kb <- tbl_display |>
+  # rename columns for the table
+  rename(
+    Demographic = demographic,
+    Group    = group,
+    `%`      = Percent
+  ) |>
+  kable(
+    caption   = "Demographics of Professors: Student Evaluations from Warsaw, Poland 2020",
+    col.names = c("Demographic", "Group", "Count", "%"),
+    align     = c("l", "l", "r", "r")
+  ) |>
+  kable_styling(
+    full_width        = FALSE,
+    bootstrap_options = c("striped", "condensed")
+  ) |>
+  # header that spans Count and %
+  add_header_above(c(" " = 2, "Professor" = 2)) |>
+  # visually group rows by Demographic
+  collapse_rows(columns = 1)
+
 ```
 
 **DVS-7: I show creativity in my tables.**
@@ -1160,22 +1241,17 @@ median_region <- ca_childcare |>
 ```{r}
 #| label: pe-1-one-call
 
-#Lab 4, Q4
-ca_childcare <- ca_childcare |> 
-  mutate(county_name = str_remove(county_name, " County"),
-  region = fct_collapse(
-    as_factor(county_name),
-    Superior = superior_counties,
-    North_Coast = north_coast_counties,
-    San_Fran = san_fran_counties,
-    N_San_Joaqin = n_san_joaquin_counties,
-    Central_Coast = central_coast_counties,
-    S_San_Joaqin = s_san_joaquin_counties,
-    Inland = inland_counties,
-    LA = la_county,
-    Orange = orange_county,
-    San_Diego = san_diego_imperial_counties
-  ))
+#Lab 8, Q2
+pivot_table <- function(df, row_var, col_var){
+    df |>
+    count({{ row_var }}, {{ col_var }}) |>
+    pivot_wider(
+      names_from = {{ col_var }},
+      values_from = n,
+      values_fill = 0
+    ) |>
+    janitor::adorn_totals(where = c("row", "col"))
+}
 
 
 
@@ -1186,21 +1262,16 @@ ca_childcare <- ca_childcare |>
 ```{r}
 #| label: pe-1-across
 
-#Lab 4, Q8 (Modified to use across function)
-statewide_by_year <- ca_childcare_long |>
-  group_by(year, setting, age_group) |>
-  summarise(
-    across(
-      .cols = median_price,
-      .fns = list(
-        lower = ~quantile(.x, 0.25, na.rm = TRUE),
-        median = ~median(.x, na.rm = TRUE),
-        upper = ~quantile(.x, 0.75, na.rm = TRUE)
+#Lab 8 Q1
+rescale_column <- function(df, cols) {
+  df |>
+    mutate(
+      across(
+        .cols = {{ cols }},
+        .fns = rescale_01
       )
-    ),
-    .groups = "drop"
-  )
-
+    )
+}
 
 ```
 
@@ -1209,7 +1280,22 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-1-map-1
 
-#Not yet done in class
+#Lab 9 Q3
+surveys |>
+  map_chr(~ class(.x)) |>
+  enframe(name = "Variable", value = "Data Type") |>
+  mutate(`Data Type` = stringr::str_to_lower(`Data Type`)) |>
+  arrange(Variable) |>
+  gt() |>
+  tab_header(
+    title = md("**Table 1. Data Types of Variables in the `surveys` Dataset**"),
+    subtitle = "Each variable’s R data type, arranged alphabetically"
+  ) |>
+  cols_label(
+    Variable = md("**Variable**"),
+    `Data Type` = md("**Data Type**")
+  ) |>
+  tab_options(table.font.size = px(13))
 
 ```
 
@@ -1220,7 +1306,18 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-2-1
 
-#Not yet done in class
+#Lab 8 first code
+rescale_01 <- function(vect) {
+  if (!is.numeric(vect)) { # Check that input is numeric
+    stop("`vect` must be numeric.", call. = FALSE)
+  }
+  if (length(vect) <= 1) { # Check that input length > 1
+    stop("`vect` must have more than one value.", call. = FALSE)
+  }
+  # Carry on
+  rng <- range(vect, na.rm = TRUE)
+  (vect - rng[1]) / (rng[2] - rng[1])
+}
 
 ```
 
@@ -1229,7 +1326,16 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-2-2
 
-#Not yet done in class
+#Lab 8 Q1
+rescale_column <- function(df, cols) {
+  df |>
+    mutate(
+      across(
+        .cols = {{ cols }},
+        .fns = rescale_01
+      )
+    )
+}
 
 ```
 
@@ -1238,7 +1344,18 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-2-3
 
-#Not yet done in class
+#Lab 8 Create a table function
+pivot_table <- function(df, row_var, col_var){
+    df |>
+    count({{ row_var }}, {{ col_var }}) |>
+    pivot_wider(
+      names_from = {{ col_var }},
+      values_from = n,
+      values_fill = 0
+    ) |>
+    janitor::adorn_totals(where = c("row", "col"))
+}
+
 
 ```
 
@@ -1249,20 +1366,21 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-3-across
 
-
-#Lab 4, Q8 (Modified to use across function)
-statewide_by_year <- ca_childcare_long |>
-  group_by(year, setting, age_group) |>
-  summarise(
-    across(
-      .cols = median_price,
-      .fns = list(
-        lower = ~quantile(.x, 0.25, na.rm = TRUE),
-        median = ~median(.x, na.rm = TRUE),
-        upper = ~quantile(.x, 0.75, na.rm = TRUE)
+#Lab 8 Q1 - Better example
+rescale_column <- function(df, cols) {
+  df |>
+    mutate(
+      across(
+        .cols = {{ cols }},
+        .fns = rescale_01
       )
-    ),
-    .groups = "drop"
+    )
+}
+#Lab 7 Q1 - use this if 1st is too similar to across() ex in PE-2
+missing_summary <- fish_file |>
+  summarise(
+    across(everything(), ~sum(is.na(.x)), .names = "{.col}_n_missing"),
+    rows_with_missing = sum(if_any(everything(), is.na))
   )
 
 ```
@@ -1272,8 +1390,22 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-3-map-1
 
-#Not yet done in class
-
+#Lab 9 Q3
+surveys |>
+  map_chr(~ class(.x)[1]) |>
+  enframe(name = "Variable", value = "Data Type") |>
+  mutate(`Data Type` = stringr::str_to_lower(`Data Type`)) |>
+  arrange(Variable) |>
+  gt() |>
+  tab_header(
+    title = md("**Table 1. Data Types of Variables in the `surveys` Dataset**"),
+    subtitle = "Each variable’s R data type, arranged alphabetically"
+  ) |>
+  cols_label(
+    Variable = md("**Variable**"),
+    `Data Type` = md("**Data Type**")
+  ) |>
+  tab_options(table.font.size = px(13))
 ```
 
 -   using a `map()` function with **more than one** input (e.g., `map_2()` or `pmap()`)
@@ -1281,7 +1413,15 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-3-map-2
 
-#Not yet done in class
+#Lab 9 - Q7
+fish |>
+  map_int(~ sum(is.na(.x))) |>   
+  enframe(name = "Variable", value = "Missing Values") |>
+  kable(
+    caption = "Number of Missing Values per Variable in the Fish Dataset",
+    col.names = c("Variable", "Missing Values")
+  ) |>
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "condensed"))
 
 ```
 
@@ -1292,13 +1432,28 @@ statewide_by_year <- ca_childcare_long |>
 ```{r}
 #| label: pe-4-1
 
-#PA 5.2, Q4 
-sus_day <- dmy_hms("24-November-2022 12:00:00")
-force_tz(sus_day, tzone = "America/Los_Angeles")
-suspects <- suspects |>
-  filter(Time.Spotted %within% interval(sus_day + weeks(5),
-                  sus_day - weeks(5)))
-suspects
+#Lab 10 Q8 using lm()
+
+mycifun <- function(beta0, beta1, n) {
+
+  # Generate Synthetic Data
+  x <- runif(n, min = 0, max = 1)
+  ep <- rnorm(n, mean = 0, sd = 1) 
+  y <- beta0 + (beta1 * x) + ep
+  
+  observed_data <- tibble(x = x, y = y)
+  
+  # Fit lm model
+  model_fit <- lm(y ~ x, data = observed_data)
+  
+  # Get Results + Check pop slope is contained within 95 CI
+  output <- tidy(model_fit, conf.int = TRUE, conf.level = 0.95) |>
+    filter(term == "x") |>
+    mutate(cover = if_else(conf.low <= beta1 & beta1 <= conf.high, 1, 0)) |>
+    select(estimate, conf.low, conf.high, cover)
+  
+ return(output) 
+}
 
 ```
 
@@ -1307,20 +1462,28 @@ suspects
 ```{r}
 #| label: pe-4-2
 
-#Lab 4, Q8
-ques_8 <- ca_childcare |>
-filter(study_year == 2018, !is.na(mhi_2018), !is.na(mc_infant))
-
-ggplot(data = ques_8, aes(x = mhi_2018, y = mc_infant)) + 
-  geom_point(aes(color = region)) +
-  geom_smooth(method = "lm", se = TRUE, color = "black") +
+# Lab 7 Q3
+missing_fish |>
+  ggplot(aes(x = factor(year), fill = factor(section))) +
+  geom_bar(position = "dodge") +
+  
+  facet_wrap(~trip) +
+  scale_fill_manual(values = trout_palette) +
   labs(
-    title = "Relationship Between Median Household Income 
-    and Infant Childcare Price in California (2018)",
-    x = "Median Household Income (2018 dollars)",
-    y = "Median Weekly Infant Care Price (Center-Based)"
+    x = "Year",
+    y = "Count of Missing Values",
+    fill = "Section",
+    title = "Missing Weight Measurements in Fish Data by Year, 
+            Section, and Trip (1989 - 2006)",
+    subtitle = "Only fish missing weight measurements are shown"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ```
 
@@ -1333,7 +1496,27 @@ ggplot(data = ques_8, aes(x = mhi_2018, y = mc_infant)) +
 ```{r}
 #| label: dsm-1-1
 
-#Not yet done in class
+#Lab 10, Q1
+
+set.seed(333) #Lucky number is 3 so 3 threes :)
+
+randomBabies <- function(n_babies){
+  simulation_data <- tibble(
+    parent = 1:n_babies,
+    returned_baby = sample(1:n_babies) 
+  )
+
+res <- simulation_data |>
+    # Get # of returned babies correctly returned babies per sim
+    summarize(matches = sum(parent == returned_baby)) |>
+    pull(matches)
+
+return(res)
+}
+# 1 - 10,000 simulations
+results <- map_int(.x = 1:10000,
+                   .f = ~ randomBabies(n_babies = 4)
+                  )
 
 ```
 
@@ -1342,7 +1525,11 @@ ggplot(data = ques_8, aes(x = mhi_2018, y = mc_infant)) +
 ```{r}
 #| label: dsm-1-2
 
-#Not yet done in class
+#Lab 10, Q9
+ci_dat <- map(.x = 1:1000,
+              .f = ~ mycifun(beta0 = 3, beta1 = .5, n = 100)
+              )
+
 ```
 
 **DSSM-2: I can conduct common statistical analyses in R.**
