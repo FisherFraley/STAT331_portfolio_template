@@ -524,6 +524,16 @@ execute:
   error: true
   echo: true
   editor: source
+  
+```
+
+Example of here package:
+
+```{r}
+
+#Lab 7 Loading Data
+#Load data and read csv
+fish_path <- here("Week 7", "data", "BlackfootFish.csv")
 ```
 
 ------------------------------------------------------------------------
