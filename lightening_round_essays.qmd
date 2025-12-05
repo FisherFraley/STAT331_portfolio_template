@@ -8,10 +8,20 @@ editor: visual
 
 1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
+    1.  If Jake L. doesn't earn an A then nobody should, because he is actively participating the class by asking great questions, being a great partner for the PA's and is always looking to help his classmates in any way he can.
+
 2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+
+    1.  I think understanding the join segments was super tough, even though I've had experience with relational algebra, left joins, right joins and all the other joins have never really cemented in my knowledge.
 
 3.  What was the easiest part of the class for you? Explain why.
 
+    1.  I would say the learning ggplot was the easiest, creating visuals was pretty straightforward and as long as you had the correct type of inputs you could always debug super easily.
+
 4.  What part of the class surprised or interested you the most? Explain why.
 
+    1.  To be honest I didn't think creating digestible tables was gonna be in the class content, I assumed this class would focus more on statistical analysis but being able to understand the data is a big step before performing such operations.
+
 5.  Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+
+    1.  Always keep your class activity's nearby when performing the labs and challenges, they are super helpful.
